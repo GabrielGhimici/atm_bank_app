@@ -5,16 +5,10 @@ defmodule Bank.Account do
   @doc """
   Starts a new agent that handles an account.
   """
-  def start_link(_opts) do
-    Agent.start_link(fn -> %{balance: 0} end)
-  end
-
-  @doc """
-  Starts a new agent that handles an account.
-"""
-  def initialize(account) do
-    :ammount = Bank.Database.get_ammount(account)
-    deposit(account, :ammount)
+  def start_link(opt) do
+    name =  Enum.at(Tuple.to_list(Enum.at(opt,0)),1)
+    amount = Bank.Database.get_ammount(name)
+    Agent.start_link(fn -> %{balance: amount, user: name} end)
   end
 
   @doc """
@@ -32,6 +26,8 @@ defmodule Bank.Account do
     new_balance = current_balance - String.to_integer(amount)
     if new_balance >= 0 do
       Agent.update(account, &Map.put(&1, :balance, new_balance))
+      name=Agent.get(account, &Map.get(&1, :user))
+      Bank.Database.make_account_persistent(name, new_balance)
       {:ok, new_balance}
     else
       {:error, "Not enough money to withdraw"}
@@ -44,6 +40,8 @@ defmodule Bank.Account do
     {:ok, current_balance} = get_balance(account)
     new_balance = current_balance + String.to_integer(amount)
     Agent.update(account, &Map.put(&1, :balance, new_balance))
+    name=Agent.get(account, &Map.get(&1, :user))
+    Bank.Database.make_account_persistent(name, new_balance)
     {:ok, new_balance}
   end
 

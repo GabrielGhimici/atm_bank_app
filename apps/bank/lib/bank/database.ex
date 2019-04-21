@@ -11,9 +11,8 @@ defmodule Bank.Database do
 
   def get_ammount(account_id) do
     case File.read("accounts/#{account_id}.txt") do
-      {:ok, ammount} ->
-        String.to_integer(ammount)
-      {:error, :enoent} -> {:error, "\r\nNO DATA FOUND FOR THIS USER\r\n"}
+      {:ok, ammount} -> String.to_integer(ammount)
+      {:error, :enoent} -> {:error, "NO DATA FOUND FOR THIS USER\r\n"}
     end
   end
 
@@ -21,9 +20,9 @@ defmodule Bank.Database do
   Makes account state persistent.
   """
   def make_account_persistent(account_id, ammount) do
-    case File.write("accounts/#{account_id}.txt", "#{ammount}", []) do
-      :ok -> {:ok, "\r\nACCOUNT UPDATED\r\n"}
-      {:error, :enoent} -> {:error, "\r\nNO DATA FOUND FOR THIS USER\r\n"}
+    case File.write("accounts/#{account_id}.txt", Integer.to_string(ammount), []) do
+      :ok -> {:ok, "ACCOUNT UPDATED\r\n"}
+      {:error, :enoent} -> {:error, "NO DATA FOUND FOR THIS USER\r\n"}
     end
   end
 

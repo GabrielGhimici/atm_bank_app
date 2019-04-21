@@ -27,8 +27,8 @@ defmodule Bank.Central do
     if Map.has_key?(state, name) do
       {:noreply, state}
     else
-      {:ok, account} = DynamicSupervisor.start_child(Bank.AccountSupervisor, Bank.Account)
-      {:noreply, Bank.Account.initialize(name)}
+      spec = {Bank.Account, client: name}
+      {:ok, account} = DynamicSupervisor.start_child(Bank.AccountSupervisor,spec)
       {:noreply, Map.put(state, name, account)}
     end
   end

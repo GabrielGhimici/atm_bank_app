@@ -41,7 +41,7 @@ defmodule Atm do
   end
 
   defp write_line(socket, {:error, :unknown_command}) do
-    :gen_tcp.send(socket, "UNSUPPORTED OPERATION\r\n")
+    :gen_tcp.send(socket, "\r\n UNSUPPORTED OPERATION\r\n")
   end
 
   defp write_line(_socket, {:error, :closed}) do
@@ -49,7 +49,7 @@ defmodule Atm do
   end
 
   defp write_line(socket, {:error, error}) do
-    :gen_tcp.send(socket, "UNFORTUNATELY THERE WAS AN ERROR. PLEASE TRY AGAIN LATER\r\n")
+    :gen_tcp.send(socket, "\r\n UNFORTUNATELY THERE WAS AN ERROR. PLEASE TRY AGAIN LATER\r\n")
     exit(error)
   end
 
