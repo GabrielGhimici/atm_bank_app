@@ -28,7 +28,7 @@ defmodule Bank.Central do
       {:noreply, state}
     else
       {:ok, account} = DynamicSupervisor.start_child(Bank.AccountSupervisor, Bank.Account)
-      {:noreply, Bank.Account.initialize(account)}
+      {:noreply, Bank.Account.initialize(name)}
       {:noreply, Map.put(state, name, account)}
     end
   end

@@ -11,10 +11,10 @@ defmodule Bank.Account do
 
   @doc """
   Starts a new agent that handles an account.
-  """
+"""
   def initialize(account) do
     :ammount = Bank.Database.get_ammount(account)
-    {:ok, Agent.update(account, &Map.put(&1, :balance, :ammount))}
+    deposit(account, :ammount)
   end
 
   @doc """

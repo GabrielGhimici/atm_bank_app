@@ -11,7 +11,8 @@ defmodule Bank.Database do
 
   def get_ammount(account_id) do
     case File.read("accounts/#{account_id}.txt") do
-      {:ok, ammount} -> String.to_integer(ammount)
+      {:ok, ammount} ->
+        String.to_integer(ammount)
       {:error, :enoent} -> {:error, "\r\nNO DATA FOUND FOR THIS USER\r\n"}
     end
   end
