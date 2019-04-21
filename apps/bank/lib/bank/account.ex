@@ -6,7 +6,15 @@ defmodule Bank.Account do
   Starts a new agent that handles an account.
   """
   def start_link(_opts) do
-    Agent.start_link(fn -> %{balance: 100} end)
+    Agent.start_link(fn -> %{balance: 0} end)
+  end
+
+  @doc """
+  Starts a new agent that handles an account.
+  """
+  def initialize(account) do
+    :ammount = Bank.Database.get_ammount(account)
+    {:ok, Agent.update(account, &Map.put(&1, :balance, :ammount))}
   end
 
   @doc """

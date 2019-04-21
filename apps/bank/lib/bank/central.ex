@@ -9,6 +9,7 @@ defmodule Bank.Central do
 
   def init(_opts) do
     names = %{}
+    Bank.Database.start_link([])
     {:ok, names}
   end
 
@@ -27,6 +28,7 @@ defmodule Bank.Central do
       {:noreply, state}
     else
       {:ok, account} = DynamicSupervisor.start_child(Bank.AccountSupervisor, Bank.Account)
+      {:noreply, Bank.Account.initialize(account)}
       {:noreply, Map.put(state, name, account)}
     end
   end
