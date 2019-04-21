@@ -9,7 +9,8 @@ defmodule Bank.Central do
 
   def init(_opts) do
     names = %{}
-    Bank.Database.start_link([])
+    DynamicSupervisor.start_child(Bank.DatabaseSupervisor, Bank.Database)
+    DynamicSupervisor.start_child(Bank.ConversionSupervisor, Bank.Conversion)
     {:ok, names}
   end
 
@@ -27,7 +28,7 @@ defmodule Bank.Central do
     if Map.has_key?(state, name) do
       {:noreply, state}
     else
-      spec = {Bank.Account, client: name}
+      spec = {Bank.Account, {:client, name}}
       {:ok, account} = DynamicSupervisor.start_child(Bank.AccountSupervisor,spec)
       {:noreply, Map.put(state, name, account)}
     end

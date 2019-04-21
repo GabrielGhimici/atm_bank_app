@@ -6,7 +6,9 @@ defmodule Atm.Action do
     case String.split(line) do
       ["CONNECT", account_id] -> {:ok, {:connect, account_id}}
       ["GET_BALANCE", account_id] -> {:ok, {:balance, account_id}}
+      ["WITHDRAW", account_id, amount, currency] -> {:ok, {:withdraw,  account_id, amount, currency}}
       ["WITHDRAW", account_id, amount] -> {:ok, {:withdraw,  account_id, amount}}
+      ["DEPOSIT", account_id, amount, currency] -> {:ok, {:deposit,  account_id, amount, currency}}
       ["DEPOSIT", account_id, amount] -> {:ok, {:deposit,  account_id, amount}}
       _ -> {:error, :unknown_command}
     end
@@ -19,7 +21,7 @@ defmodule Atm.Action do
       {:ok, _pid} -> {:ok, "CONNECTED SUCCESSFUL\r\n"}
       {:error, :not_found} ->
         GenServer.cast(Bank.Central, {:create, account_id})
-        {:ok, "\r\nCONNECTION CREATED\r\n"}
+        {:ok, "CONNECTION CREATED\r\n"}
     end
   end
 
@@ -27,8 +29,36 @@ defmodule Atm.Action do
     case lookup(account_id) do
       {:ok, pid} ->
         {:ok, amount} = GenServer.call(Bank.Central, {:balance, pid})
-        {:ok, "\r\nAVAILABLE SUM: #{amount}\r\n"}
-      {:error, :not_found} -> {:error, "\r\nOPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
+        {:ok, "AVAILABLE SUM: #{amount}\r\n"}
+      {:error, :not_found} -> {:error, "OPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
+    end
+  end
+
+  def run({:withdraw,  account_id, amount, currency}) do
+    case lookup(account_id) do
+      {:ok, pid} ->
+        case Bank.Conversion.convert(amount, currency) do
+          {:ok, sum} ->
+            case GenServer.call(Bank.Central, {:withdraw, pid, sum}) do
+              {:ok, amount} -> {:ok, "NEW BALANCE IS: #{amount}\r\n"}
+              {:error, message} -> {:ok, message}
+            end
+          {:fail, _sum} -> {:ok, "UNSUPPORTED CURRENCY\r\n"}
+        end
+      {:error, :not_found} -> {:error, "OPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
+    end
+  end
+
+  def run({:deposit,  account_id, amount, currency}) do
+    case lookup(account_id) do
+      {:ok, pid} ->
+        case Bank.Conversion.convert(amount, currency) do
+          {:ok, sum} ->
+            {:ok, amount} = GenServer.call(Bank.Central, {:deposit, pid, sum})
+            {:ok, "NEW BALANCE IS: #{amount}\r\n"}
+          {:fail, _sum} -> {:ok, "UNSUPPORTED CURRENCY\r\n"}
+        end
+      {:error, :not_found} -> {:error, "OPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
     end
   end
 
@@ -36,10 +66,10 @@ defmodule Atm.Action do
     case lookup(account_id) do
       {:ok, pid} ->
         case GenServer.call(Bank.Central, {:withdraw, pid, amount}) do
-          {:ok, amount} -> {:ok, "\r\nNEW BALANCE IS: #{amount}\r\n"}
+          {:ok, amount} -> {:ok, "NEW BALANCE IS: #{amount}\r\n"}
           {:error, message} -> {:ok, message}
         end
-      {:error, :not_found} -> {:error, "\r\nOPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
+      {:error, :not_found} -> {:error, "OPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
     end
   end
 
@@ -47,8 +77,8 @@ defmodule Atm.Action do
     case lookup(account_id) do
       {:ok, pid} ->
         {:ok, amount} = GenServer.call(Bank.Central, {:deposit, pid, amount})
-        {:ok, "\r\nNEW BALANCE IS: #{amount}\r\n"}
-      {:error, :not_found} -> {:error, "\r\nOPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
+        {:ok, "NEW BALANCE IS: #{amount}\r\n"}
+      {:error, :not_found} -> {:error, "OPERATION FAILED! THERE IS AN ISSUE WITH YOUR ID.\r\n"}
     end
   end
 

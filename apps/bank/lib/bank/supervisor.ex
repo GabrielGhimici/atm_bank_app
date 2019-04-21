@@ -8,10 +8,12 @@ defmodule Bank.Supervisor do
 
   def init(_arg) do
     children = [
+      {DynamicSupervisor, name: Bank.DatabaseSupervisor, strategy: :one_for_one},
+      {DynamicSupervisor, name: Bank.ConversionSupervisor, strategy: :one_for_one},
       {DynamicSupervisor, name: Bank.AccountSupervisor, strategy: :one_for_one},
       {Bank.Central, name: Bank.Central}
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_all)
   end
 end
